@@ -14,6 +14,7 @@ public class UserManageService(UserRepository userRepository)
                 return false;
             user.UserId = foundUser.UserId;
         }
+        user.UpdatedAt = DateTime.Now;
         userRepository.UpdateUser(user);
         return true;
     }
@@ -37,5 +38,15 @@ public class UserManageService(UserRepository userRepository)
     public void AddUser(User user)
     {
         userRepository.AddUser(user);
+    }
+
+    public List<User>? GetUsersByCreatedPeriod(DateTime startDate, DateTime endDate)
+    {
+        return userRepository.GetUsersByCreatedPeriod(startDate, endDate);
+    }
+
+    public List<User>? GetUsersByUpdatedPeriod(DateTime startDate, DateTime endDate)
+    {
+        return userRepository.GetUsersByUpdatedPeriod(startDate, endDate);
     }
 }

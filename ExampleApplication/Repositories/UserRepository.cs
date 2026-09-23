@@ -40,6 +40,16 @@ public class UserRepository
         return _users.Find(user => user.Email == email);
     }
 
+    public List<User>? GetUsersByCreatedPeriod(DateTime startDate, DateTime endDate)
+    {
+        return _users.FindAll(u => u.CreatedAt >= startDate && u.CreatedAt <= endDate);
+    }
+    
+    public List<User>? GetUsersByUpdatedPeriod(DateTime startDate, DateTime endDate)
+    {
+        return _users.FindAll(u => u.UpdatedAt >= startDate && u.CreatedAt <= endDate);
+    }
+
     private void recountIncrement()
     {
         if(_increment != null)

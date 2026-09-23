@@ -1,10 +1,16 @@
-﻿using ExampleApplication.DTO;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
+using ExampleApplication.DTO;
 using ExampleApplication.Entity;
+using ExampleApplication.Helpers;
 using ExampleApplication.Repository;
 using ExampleApplication.Service;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.VisualBasic.CompilerServices;
 
-namespace ExampleApplication.Controller;
+namespace ExampleApplication.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -13,6 +19,30 @@ public class AuthorizationController(
         AuthorizationService authorizationService
     ): ControllerBase
 {
+    [HttpGet("users/updated/period")]
+    public IActionResult GetUsersByUpdatedPeriod([FromQuery][Required] DateTime startDate,[FromQuery][Required] DateTime endDate)
+    {
+        if (!ValidationHelper.TryValidatePeriod(startDate, endDate, out var error))
+        {
+            return new BadRequestObjectResult(error);
+        }
+        var result = userManageService.GetUsersByUpdatedPeriod(startDate, endDate);
+        result.Select(u => u.MapUserToUserDto()).ToList();
+        return new JsonResult(JsonSerializer.Serialize(result));
+    }
+    
+    [HttpGet("users/created/period")]
+    public IActionResult GetUsersByCreatedPeriod([FromQuery][Required] DateTime startDate,[FromQuery][Required] DateTime endDate)
+    {
+        if (!ValidationHelper.TryValidatePeriod(startDate, endDate, out var error))
+        {
+            return new BadRequestObjectResult(error);
+        }
+        var result = userManageService.GetUsersByCreatedPeriod(startDate, endDate);
+        result.Select(u => u.MapUserToUserDto()).ToList();
+        return new JsonResult(JsonSerializer.Serialize(result));
+    }
+    
     [HttpPost("login")]
     public IActionResult Login([FromBody] LoginDto loginDto)
     {

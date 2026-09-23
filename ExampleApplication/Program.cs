@@ -1,5 +1,7 @@
+using System.Globalization;
 using ExampleApplication.Repository;
 using ExampleApplication.Service;
+using Microsoft.AspNetCore.Localization;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,10 +15,10 @@ builder.Services.AddSingleton<UserManageService>();
 builder.Services.AddSingleton<AuthorizationService>();
 
 var app = builder.Build();
-
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();
@@ -24,7 +26,5 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
-
-app.MapScalarApiReference();
 
 app.Run();
