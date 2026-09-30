@@ -1,63 +1,58 @@
-﻿using ExampleApplication.Entity;
+﻿using ExampleApplication.Database;
+using ExampleApplication.Entity;
+using Microsoft.EntityFrameworkCore;
 
 namespace ExampleApplication.Repository;
 
 public class UserRepository
 {
-    private List<User> _users = new List<User>();
-    private int? _increment = 0;
+    private readonly AppDbContext _db;
 
-    public void AddUser(User user)
-    {
-        recountIncrement();            //инкремент пересчитывается, либо инициализируется
-        user.UserId = _increment ?? 1; //на самом деле инкремент на этом этапе не может быть null,
-                                      //пришлось захардкодить чтобы не ругался компилятор
-        _users.Add(user);
-    }
+    public UserRepository(AppDbContext db) => _db = db;
 
-    public bool RemoveUser(User user)
+    public async Task AddUserAsync(User user, CancellationToken ct = default)
     {
-        if (_users.Contains(user))
-        {
-            _users.Remove(user);
-            return true;
-        }
-        return false;   
+        var now = DateTime.UtcNow;
+        user.CreatedAt ??= now;
+        user.UpdatedAt ??= now;
+
+        _db.Users.Add(user);
+        await _db.SaveChangesAsync(ct);
+        // после SaveChanges у user.UserId будет сгенерированный БД id
     }
 
-    public void UpdateUser(User user)
+    public async Task<bool> RemoveUserAsync(int userId, CancellationToken ct = default)
     {
-        _users[_users.FindIndex(u => u.UserId == user.UserId)] = user;
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.UserId == userId, ct);
+        if (user is null) return false;
+
+        _db.Users.Remove(user);
+        await _db.SaveChangesAsync(ct);
+        return true;
     }
 
-    public User? FindUserById(int userId)
+    public async Task UpdateUserAsync(User user, CancellationToken ct = default)
     {
-        return _users.Find(user => user.UserId == userId);
-    }
-    
-    public User? FindUserByEmail(string email)
-    {
-        return _users.Find(user => user.Email == email);
+        user.UpdatedAt = DateTime.UtcNow;
+        _db.Users.Update(user);
+        await _db.SaveChangesAsync(ct);
     }
 
-    public List<User>? GetUsersByCreatedPeriod(DateTime startDate, DateTime endDate)
-    {
-        return _users.FindAll(u => u.CreatedAt >= startDate && u.CreatedAt <= endDate);
-    }
-    
-    public List<User>? GetUsersByUpdatedPeriod(DateTime startDate, DateTime endDate)
-    {
-        return _users.FindAll(u => u.UpdatedAt >= startDate && u.CreatedAt <= endDate);
-    }
+    public Task<User?> FindUserByIdAsync(int userId, CancellationToken ct = default)
+        => _db.Users.FirstOrDefaultAsync(u => u.UserId == userId, ct);
 
-    private void recountIncrement()
-    {
-        if(_increment != null)
-            _increment++;
-        else
-        {
-            _users.Sort();
-            _increment = _users.Last().UserId + 1;
-        }
-    }
+    public Task<User?> FindUserByEmailAsync(string email, CancellationToken ct = default)
+        => _db.Users.FirstOrDefaultAsync(u => u.Email == email, ct);
+
+    public Task<List<User>> GetUsersByCreatedPeriodAsync(DateTime start, DateTime end, CancellationToken ct = default)
+        => _db.Users
+              .Where(u => u.CreatedAt >= start && u.CreatedAt <= end)
+              .AsNoTracking()
+              .ToListAsync(ct);
+
+    public Task<List<User>> GetUsersByUpdatedPeriodAsync(DateTime start, DateTime end, CancellationToken ct = default)
+        => _db.Users
+              .Where(u => u.UpdatedAt >= start && u.UpdatedAt <= end)   // было CreatedAt — это баг
+              .AsNoTracking()
+              .ToListAsync(ct);
 }

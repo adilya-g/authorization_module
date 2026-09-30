@@ -5,48 +5,47 @@ namespace ExampleApplication.Service;
 
 public class UserManageService(UserRepository userRepository)
 {
-    public bool Update(User user)
+    public async Task<bool> Update(User user)
     {
         if (user.UserId == null)
         {
-            var foundUser = userRepository.FindUserByEmail(user.Email);
+            var foundUser = await userRepository.FindUserByEmailAsync(user.Email);
             if (foundUser == null)
                 return false;
             user.UserId = foundUser.UserId;
         }
         user.UpdatedAt = DateTime.Now;
-        userRepository.UpdateUser(user);
+        await userRepository.UpdateUserAsync(user);
         return true;
     }
 
-    public bool Delete(int userId)
+    public async Task<bool> Delete(int userId)
     {
-        var user = FindUserById(userId);
-        return user != null && userRepository.RemoveUser(user);
+        return await userRepository.RemoveUserAsync(userId);
     }
 
-    public User? FindUserById(int userId)
+    public async Task<User?> FindUserById(int userId)
     {
-        return userRepository.FindUserById(userId);
+        return await userRepository.FindUserByIdAsync(userId);
     }
     
-    public User? FindUserByEmail(string email)
+    public async Task<User?> FindUserByEmail(string email)
     {
-        return userRepository.FindUserByEmail(email);
+        return await userRepository.FindUserByEmailAsync(email);
     }
 
-    public void AddUser(User user)
+    public async Task AddUser(User user)
     {
-        userRepository.AddUser(user);
+        userRepository.AddUserAsync(user);
     }
 
-    public List<User>? GetUsersByCreatedPeriod(DateTime startDate, DateTime endDate)
+    public async Task<List<User>?> GetUsersByCreatedPeriod(DateTime startDate, DateTime endDate)
     {
-        return userRepository.GetUsersByCreatedPeriod(startDate, endDate);
+        return await userRepository.GetUsersByCreatedPeriodAsync(startDate, endDate);
     }
 
-    public List<User>? GetUsersByUpdatedPeriod(DateTime startDate, DateTime endDate)
+    public async Task<List<User>?> GetUsersByUpdatedPeriod(DateTime startDate, DateTime endDate)
     {
-        return userRepository.GetUsersByUpdatedPeriod(startDate, endDate);
+        return await userRepository.GetUsersByUpdatedPeriodAsync(startDate, endDate);
     }
 }

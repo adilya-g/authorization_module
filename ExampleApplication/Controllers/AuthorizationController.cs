@@ -20,33 +20,33 @@ public class AuthorizationController(
     ): ControllerBase
 {
     [HttpGet("users/updated/period")]
-    public IActionResult GetUsersByUpdatedPeriod([FromQuery][Required] DateTime startDate,[FromQuery][Required] DateTime endDate)
+    public async Task<IActionResult> GetUsersByUpdatedPeriod([FromQuery][Required] DateTime startDate,[FromQuery][Required] DateTime endDate)
     {
         if (!ValidationHelper.TryValidatePeriod(startDate, endDate, out var error))
         {
             return new BadRequestObjectResult(error);
         }
-        var result = userManageService.GetUsersByUpdatedPeriod(startDate, endDate);
-        result.Select(u => u.MapUserToUserDto()).ToList();
-        return new JsonResult(JsonSerializer.Serialize(result));
+        var midResult = await userManageService.GetUsersByUpdatedPeriod(startDate, endDate);
+        var result = midResult.Select(u => u.MapUserToUserDto()).ToList();
+        return new JsonResult(result);
     }
     
     [HttpGet("users/created/period")]
-    public IActionResult GetUsersByCreatedPeriod([FromQuery][Required] DateTime startDate,[FromQuery][Required] DateTime endDate)
+    public async Task<IActionResult> GetUsersByCreatedPeriod([FromQuery][Required] DateTime startDate,[FromQuery][Required] DateTime endDate)
     {
         if (!ValidationHelper.TryValidatePeriod(startDate, endDate, out var error))
         {
             return new BadRequestObjectResult(error);
         }
-        var result = userManageService.GetUsersByCreatedPeriod(startDate, endDate);
-        result.Select(u => u.MapUserToUserDto()).ToList();
-        return new JsonResult(JsonSerializer.Serialize(result));
+        var midResult = await userManageService.GetUsersByCreatedPeriod(startDate, endDate);
+        var result = midResult.Select(u => u.MapUserToUserDto()).ToList();
+        return new JsonResult(result);
     }
     
     [HttpPost("login")]
-    public IActionResult Login([FromBody] LoginDto loginDto)
+    public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
     {
-        var user = userManageService.FindUserByEmail(loginDto.email);
+        var user = await userManageService.FindUserByEmail(loginDto.email);
         if (user == null)
             return NotFound();
         var passed = authorizationService.VerifyPassword(loginDto.email, user);
@@ -75,9 +75,9 @@ public class AuthorizationController(
     }
 
     [HttpDelete("user/{userId}")]
-    public IActionResult DeleteUser([FromRoute] int userId)
+    public async Task<IActionResult> DeleteUser([FromRoute] int userId)
     {
-        if (userManageService.Delete(userId))
+        if (await userManageService.Delete(userId))
             return Ok();
         return NotFound();
     }
