@@ -11,7 +11,7 @@ public static class DtoMapping
         user.FirstName = registerDto.FirstName;
         user.LastName = registerDto.LastName;
         user.HashedPassword = "";
-        user.CreatedAt = DateTime.Now;
+        user.CreatedAt = DateTime.UtcNow;
         return user;
     }
 
